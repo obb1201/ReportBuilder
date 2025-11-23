@@ -1,4 +1,7 @@
 @page "/report-builder"
+@using global::ReportBuilder.Web.Components
+@using global::ReportBuilder.Core.Models.Metadata
+@using global::ReportBuilder.Web.Services
 @inject MetadataApiClient ApiClient
 @inject ISnackbar Snackbar
 
@@ -77,13 +80,15 @@
     private List<MetadataField> _selectedFields = new();
     private string _generatedQuery = string.Empty;
 
-    private async Task HandleObjectSelected(MetadataObject obj)
+    private Task HandleObjectSelected(MetadataObject obj)
     {
         _selectedObject = obj;
         _selectedFields.Clear();
         GenerateQuery();
         
         Snackbar.Add($"Selected: {obj.Label} ({obj.Fields.Count} fields available)", Severity.Info);
+
+        return Task.CompletedTask;
     }
 
     private Task HandleFieldAdded(MetadataField field)

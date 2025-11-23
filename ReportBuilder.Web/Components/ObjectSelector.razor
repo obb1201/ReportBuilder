@@ -1,3 +1,5 @@
+@using ReportBuilder.Core.Models.Metadata
+@using ReportBuilder.Web.Services
 @inject MetadataApiClient ApiClient
 @inject ISnackbar Snackbar
 
@@ -94,15 +96,23 @@
         }
     }
 
-    private async Task<IEnumerable<MetadataObject>> SearchObjects(string searchTerm)
+    private Task<IEnumerable<MetadataObject>> SearchObjects(string searchTerm, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-            return _objects.Take(50);
+        IEnumerable<MetadataObject> result;
 
-        return _objects
-            .Where(o => o.Label.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                       o.ApiName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-            .Take(50);
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            result = _objects.Take(50);
+        }
+        else
+        {
+            result = _objects
+                .Where(o => o.Label.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            o.ApiName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Take(50);
+        }
+
+        return Task.FromResult(result);
     }
 
     private string GetObjectIcon(MetadataObject obj)
