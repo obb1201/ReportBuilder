@@ -4,6 +4,7 @@ using ReportBuilder.Core.Interfaces;
 using ReportBuilder.Core.Models.Metadata;
 using ReportBuilder.Infrastructure.Data;
 using ReportBuilder.Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace ReportBuilder.Infrastructure.Repositories;
 
