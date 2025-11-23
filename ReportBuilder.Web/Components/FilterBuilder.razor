@@ -1,5 +1,5 @@
-@using global::ReportBuilder.Core.Models.Metadata
-@using global::ReportBuilder.Web.Models
+@using ReportBuilder.Core.Models.Metadata
+@using ReportBuilder.Web.Models
 @inject ISnackbar Snackbar
 
 <MudCard>
@@ -153,29 +153,29 @@
     public List<FilterCriteria> Filters { get; set; } = new();
 
     [Parameter]
-    public EventCallback<List<FilterCriteria>> FiltersChanged { get; set; }
+    public EventCallback<List<FilterCriteria>> OnFiltersChanged { get; set; }
 
-    private void AddFilter()
+    private async Task AddFilter()
     {
         Filters.Add(new FilterCriteria());
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
     }
 
-    private void RemoveFilter(FilterCriteria filter)
+    private async Task RemoveFilter(FilterCriteria filter)
     {
         Filters.Remove(filter);
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
         Snackbar.Add("Filter removed", Severity.Info);
     }
 
-    private void ClearAllFilters()
+    private async Task ClearAllFilters()
     {
         Filters.Clear();
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
         Snackbar.Add("All filters cleared", Severity.Info);
     }
 
-    private void HandleFieldChanged(FilterCriteria filter, MetadataField field)
+    private async Task HandleFieldChanged(FilterCriteria filter, MetadataField field)
     {
         filter.Field = field;
         // Reset operator to first available for this field type
@@ -183,10 +183,10 @@
         filter.Operation = availableOps.FirstOrDefault();
         filter.Value = string.Empty;
         filter.Value2 = null;
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
     }
 
-    private void HandleOperatorChanged(FilterCriteria filter, FilterOperation operation)
+    private async Task HandleOperatorChanged(FilterCriteria filter, FilterOperation operation)
     {
         filter.Operation = operation;
         // Clear values if switching to/from null check
@@ -195,23 +195,23 @@
             filter.Value = string.Empty;
             filter.Value2 = null;
         }
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
     }
 
-    private void HandleLogicalOperatorChanged(FilterCriteria filter, LogicalOperator op)
+    private async Task HandleLogicalOperatorChanged(FilterCriteria filter, LogicalOperator op)
     {
         filter.LogicalOperator = op;
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
     }
 
-    private void HandleValueChanged(FilterCriteria filter, string value, bool isSecondValue = false)
+    private async Task HandleValueChanged(FilterCriteria filter, string value, bool isSecondValue = false)
     {
         if (isSecondValue)
             filter.Value2 = value;
         else
             filter.Value = value;
 
-        NotifyFiltersChanged();
+        await NotifyFiltersChanged();
     }
 
     private bool IsNullCheckOperation(FilterOperation operation)
@@ -221,7 +221,7 @@
 
     private async Task NotifyFiltersChanged()
     {
-        await FiltersChanged.InvokeAsync(Filters);
+        await OnFiltersChanged.InvokeAsync(Filters);
     }
 
     private RenderFragment RenderValueInput(FilterCriteria filter, bool isSecondValue)
