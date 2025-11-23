@@ -1,0 +1,56 @@
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">SOQL Query Preview</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            @if (!string.IsNullOrWhiteSpace(Query))
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" 
+                             Color="Color.Primary" 
+                             Size="Size.Small"
+                             OnClick="CopyToClipboard"
+                             Title="Copy query to clipboard" />
+            }
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (string.IsNullOrWhiteSpace(Query))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Select an object and add fields to generate a SOQL query
+            </MudAlert>
+        }
+        else
+        {
+            <MudPaper Elevation="0" Class="pa-4" Style="background-color: #f5f5f5; font-family: 'Courier New', monospace;">
+                <MudText Typo="Typo.body2" Style="white-space: pre-wrap; color: #1976d2;">@Query</MudText>
+            </MudPaper>
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                This query can be executed in Salesforce Developer Console or via API
+            </MudText>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public string Query { get; set; } = string.Empty;
+
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Query);
+            Snackbar.Add("Query copied to clipboard!", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Failed to copy query", Severity.Error);
+        }
+    }
+}

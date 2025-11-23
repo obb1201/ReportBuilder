@@ -1,0 +1,137 @@
+@page "/report-builder"
+@inject MetadataApiClient ApiClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Report Builder</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">
+    <MudIcon Icon="@Icons.Material.Filled.Assessment" /> Report Builder
+</MudText>
+<MudText Typo="Typo.body1" Class="mb-4">
+    Build custom reports by selecting an object and choosing fields to display
+</MudText>
+
+<MudGrid>
+    <!-- Left Column: Object & Field Selection -->
+    <MudItem xs="12" md="5">
+        <MudStack Spacing="4">
+            <!-- Object Selector -->
+            <ObjectSelector OnObjectSelected="HandleObjectSelected" />
+
+            <!-- Field Panel -->
+            @if (_selectedObject != null)
+            {
+                <FieldPanel ObjectName="@_selectedObject.ApiName"
+                           Fields="@_selectedObject.Fields"
+                           OnFieldAdded="HandleFieldAdded" />
+            }
+        </MudStack>
+    </MudItem>
+
+    <!-- Right Column: Selected Fields & Query -->
+    <MudItem xs="12" md="7">
+        <MudStack Spacing="4">
+            <!-- Selected Fields -->
+            <SelectedFieldsDisplay SelectedFields="@_selectedFields"
+                                  OnFieldRemoved="HandleFieldRemoved"
+                                  OnFieldsCleared="HandleFieldsCleared" />
+
+            <!-- Query Preview -->
+            <QueryPreview Query="@_generatedQuery" />
+
+            <!-- Action Buttons -->
+            @if (_selectedFields.Any())
+            {
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Filled" 
+                                     Color="Color.Primary" 
+                                     StartIcon="@Icons.Material.Filled.PlayArrow"
+                                     Disabled="true">
+                                Run Query (Coming Soon)
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" 
+                                     Color="Color.Secondary" 
+                                     StartIcon="@Icons.Material.Filled.Save"
+                                     Disabled="true">
+                                Save Report (Coming Soon)
+                            </MudButton>
+                            <MudSpacer />
+                            <MudButton Variant="Variant.Text" 
+                                     Color="Color.Default" 
+                                     StartIcon="@Icons.Material.Filled.Refresh"
+                                     OnClick="ResetReport">
+                                Reset
+                            </MudButton>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudStack>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MetadataObject? _selectedObject;
+    private List<MetadataField> _selectedFields = new();
+    private string _generatedQuery = string.Empty;
+
+    private async Task HandleObjectSelected(MetadataObject obj)
+    {
+        _selectedObject = obj;
+        _selectedFields.Clear();
+        GenerateQuery();
+        
+        Snackbar.Add($"Selected: {obj.Label} ({obj.Fields.Count} fields available)", Severity.Info);
+    }
+
+    private Task HandleFieldAdded(MetadataField field)
+    {
+        // Check if field already added
+        if (_selectedFields.Any(f => f.ApiName == field.ApiName))
+        {
+            Snackbar.Add($"Field {field.Label} is already added", Severity.Warning);
+            return Task.CompletedTask;
+        }
+
+        _selectedFields.Add(field);
+        GenerateQuery();
+        return Task.CompletedTask;
+    }
+
+    private Task HandleFieldRemoved(MetadataField field)
+    {
+        _selectedFields.Remove(field);
+        GenerateQuery();
+        return Task.CompletedTask;
+    }
+
+    private Task HandleFieldsCleared()
+    {
+        _selectedFields.Clear();
+        GenerateQuery();
+        return Task.CompletedTask;
+    }
+
+    private void GenerateQuery()
+    {
+        if (_selectedObject == null || !_selectedFields.Any())
+        {
+            _generatedQuery = string.Empty;
+            return;
+        }
+
+        // Generate SOQL query
+        var fieldNames = string.Join(", ", _selectedFields.Select(f => f.ApiName));
+        _generatedQuery = $"SELECT {fieldNames}\nFROM {_selectedObject.ApiName}";
+    }
+
+    private void ResetReport()
+    {
+        _selectedObject = null;
+        _selectedFields.Clear();
+        _generatedQuery = string.Empty;
+        Snackbar.Add("Report reset", Severity.Info);
+    }
+}

@@ -1,0 +1,143 @@
+@inject MetadataApiClient ApiClient
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardContent>
+        <MudText Typo="Typo.h6" GutterBottom="true">Select Object</MudText>
+        
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2" Class="mt-2">Loading objects...</MudText>
+        }
+        else if (_objects.Any())
+        {
+            <MudAutocomplete T="MetadataObject" 
+                             Label="Salesforce Object" 
+                             @bind-Value="_selectedObject"
+                             SearchFunc="SearchObjects"
+                             ToStringFunc="@(obj => obj?.Label ?? "")"
+                             Variant="Variant.Outlined"
+                             AdornmentIcon="@Icons.Material.Filled.Search"
+                             AdornmentColor="Color.Primary"
+                             ShowProgressIndicator="true"
+                             Dense="true"
+                             Clearable="true"
+                             ResetValueOnEmptyText="true">
+                <ItemTemplate Context="obj">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@GetObjectIcon(obj)" Size="Size.Small" />
+                        <div>
+                            <MudText Typo="Typo.body1">@obj.Label</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@obj.ApiName</MudText>
+                        </div>
+                        @if (obj.IsCustom)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">Custom</MudChip>
+                        }
+                    </MudStack>
+                </ItemTemplate>
+            </MudAutocomplete>
+
+            @if (_selectedObject != null)
+            {
+                <MudAlert Severity="Severity.Success" Class="mt-4" Dense="true">
+                    Selected: <strong>@_selectedObject.Label</strong> (@_selectedObject.Fields.Count fields)
+                </MudAlert>
+            }
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning">
+                No objects found. Make sure the API is running and metadata is synced.
+            </MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public EventCallback<MetadataObject> OnObjectSelected { get; set; }
+
+    private List<MetadataObject> _objects = new();
+    private MetadataObject? _selectedObject;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadObjectsAsync();
+    }
+
+    private async Task LoadObjectsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _objects = await ApiClient.GetObjectsAsync();
+            
+            if (_objects.Any())
+            {
+                Snackbar.Add($"Loaded {_objects.Count} objects", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("No objects found. Check API connection.", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading objects: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task<IEnumerable<MetadataObject>> SearchObjects(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return _objects.Take(50);
+
+        return _objects
+            .Where(o => o.Label.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       o.ApiName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Take(50);
+    }
+
+    private string GetObjectIcon(MetadataObject obj)
+    {
+        if (obj.IsCustom)
+            return Icons.Material.Filled.Extension;
+        
+        return obj.ApiName switch
+        {
+            "Account" => Icons.Material.Filled.Business,
+            "Contact" => Icons.Material.Filled.Person,
+            "Opportunity" => Icons.Material.Filled.AttachMoney,
+            "Lead" => Icons.Material.Filled.PersonAdd,
+            "Case" => Icons.Material.Filled.Support,
+            "Campaign" => Icons.Material.Filled.Campaign,
+            "Task" => Icons.Material.Filled.Task,
+            "Event" => Icons.Material.Filled.Event,
+            "User" => Icons.Material.Filled.SupervisorAccount,
+            _ => Icons.Material.Filled.Storage
+        };
+    }
+
+    private async Task HandleSelectionChanged(MetadataObject? obj)
+    {
+        _selectedObject = obj;
+        
+        if (obj != null)
+        {
+            // Load full object details with fields
+            var fullObject = await ApiClient.GetObjectAsync(obj.ApiName);
+            if (fullObject != null)
+            {
+                _selectedObject = fullObject;
+                await OnObjectSelected.InvokeAsync(fullObject);
+            }
+        }
+    }
+}

@@ -1,0 +1,108 @@
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Selected Fields</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            @if (SelectedFields.Any())
+            {
+                <MudChip T="string" Size="Size.Small">@SelectedFields.Count selected</MudChip>
+                <MudIconButton Icon="@Icons.Material.Filled.Clear" 
+                             Color="Color.Error" 
+                             Size="Size.Small"
+                             OnClick="ClearAll"
+                             Title="Clear all fields" />
+            }
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (!SelectedFields.Any())
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Click on fields from the Available Fields panel to add them to your report
+            </MudAlert>
+        }
+        else
+        {
+            <MudList T="string" Dense="true">
+                @foreach (var field in SelectedFields)
+                {
+                    <MudListItem T="string">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" Color="Color.Default" />
+                            <MudIcon Icon="@GetFieldIcon(field.DataType)" Size="Size.Small" Color="@GetFieldColor(field.DataType)" />
+                            <div style="flex: 1;">
+                                <MudText Typo="Typo.body2"><strong>@field.Label</strong></MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@field.ApiName</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@field.DataType</MudChip>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" 
+                                         Size="Size.Small" 
+                                         Color="Color.Error"
+                                         OnClick="@(() => RemoveField(field))"
+                                         Title="Remove field" />
+                        </MudStack>
+                    </MudListItem>
+                    <MudDivider />
+                }
+            </MudList>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public List<MetadataField> SelectedFields { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<MetadataField> OnFieldRemoved { get; set; }
+
+    [Parameter]
+    public EventCallback OnFieldsCleared { get; set; }
+
+    private async Task RemoveField(MetadataField field)
+    {
+        await OnFieldRemoved.InvokeAsync(field);
+        Snackbar.Add($"Removed field: {field.Label}", Severity.Info);
+    }
+
+    private async Task ClearAll()
+    {
+        await OnFieldsCleared.InvokeAsync();
+        Snackbar.Add("All fields cleared", Severity.Info);
+    }
+
+    private string GetFieldIcon(FieldDataType dataType)
+    {
+        return dataType switch
+        {
+            FieldDataType.String => Icons.Material.Filled.TextFields,
+            FieldDataType.Int => Icons.Material.Filled.Numbers,
+            FieldDataType.Double => Icons.Material.Filled.Numbers,
+            FieldDataType.Currency => Icons.Material.Filled.AttachMoney,
+            FieldDataType.Boolean => Icons.Material.Filled.ToggleOn,
+            FieldDataType.Date => Icons.Material.Filled.CalendarToday,
+            FieldDataType.DateTime => Icons.Material.Filled.Schedule,
+            FieldDataType.Email => Icons.Material.Filled.Email,
+            FieldDataType.Phone => Icons.Material.Filled.Phone,
+            FieldDataType.Picklist => Icons.Material.Filled.List,
+            FieldDataType.Reference => Icons.Material.Filled.Link,
+            _ => Icons.Material.Filled.TextFields
+        };
+    }
+
+    private Color GetFieldColor(FieldDataType dataType)
+    {
+        return dataType switch
+        {
+            FieldDataType.Currency => Color.Success,
+            FieldDataType.Boolean => Color.Info,
+            FieldDataType.Date => Color.Secondary,
+            FieldDataType.DateTime => Color.Secondary,
+            FieldDataType.Reference => Color.Warning,
+            _ => Color.Default
+        };
+    }
+}

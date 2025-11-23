@@ -1,0 +1,137 @@
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Available Fields</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            @if (Fields.Any())
+            {
+                <MudChip T="string" Size="Size.Small">@Fields.Count fields</MudChip>
+            }
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent Style="max-height: 600px; overflow-y: auto;">
+        @if (string.IsNullOrEmpty(ObjectName))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Select an object to view its fields
+            </MudAlert>
+        }
+        else if (!Fields.Any())
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true">
+                No fields found for this object
+            </MudAlert>
+        }
+        else
+        {
+            <MudTextField @bind-Value="_searchText" 
+                         Label="Search fields" 
+                         Variant="Variant.Outlined" 
+                         Adornment="Adornment.Start" 
+                         AdornmentIcon="@Icons.Material.Filled.Search"
+                         Margin="Margin.Dense"
+                         Class="mb-4" />
+
+            <MudList T="string" Clickable="true" Dense="true">
+                @foreach (var field in FilteredFields)
+                {
+                    <MudListItem T="string" OnClick="@(() => AddField(field))">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@GetFieldIcon(field.DataType)" Size="Size.Small" Color="@GetFieldColor(field.DataType)" />
+                            <div style="flex: 1;">
+                                <MudText Typo="Typo.body2">@field.Label</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @field.ApiName
+                                </MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@GetFieldColor(field.DataType)">
+                                @field.DataType.ToString()
+                            </MudChip>
+                            @if (field.IsRequired)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text">Required</MudChip>
+                            }
+                            @if (field.IsCustom)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">Custom</MudChip>
+                            }
+                        </MudStack>
+                    </MudListItem>
+                    <MudDivider />
+                }
+            </MudList>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public string? ObjectName { get; set; }
+
+    [Parameter]
+    public List<MetadataField> Fields { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<MetadataField> OnFieldAdded { get; set; }
+
+    private string _searchText = "";
+
+    private IEnumerable<MetadataField> FilteredFields
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_searchText))
+                return Fields;
+
+            return Fields.Where(f =>
+                f.Label.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                f.ApiName.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private async Task AddField(MetadataField field)
+    {
+        await OnFieldAdded.InvokeAsync(field);
+        Snackbar.Add($"Added field: {field.Label}", Severity.Success);
+    }
+
+    private string GetFieldIcon(FieldDataType dataType)
+    {
+        return dataType switch
+        {
+            FieldDataType.String => Icons.Material.Filled.TextFields,
+            FieldDataType.Int => Icons.Material.Filled.Numbers,
+            FieldDataType.Double => Icons.Material.Filled.Numbers,
+            FieldDataType.Currency => Icons.Material.Filled.AttachMoney,
+            FieldDataType.Boolean => Icons.Material.Filled.ToggleOn,
+            FieldDataType.Date => Icons.Material.Filled.CalendarToday,
+            FieldDataType.DateTime => Icons.Material.Filled.Schedule,
+            FieldDataType.Email => Icons.Material.Filled.Email,
+            FieldDataType.Phone => Icons.Material.Filled.Phone,
+            FieldDataType.Url => Icons.Material.Filled.Link,
+            FieldDataType.Picklist => Icons.Material.Filled.List,
+            FieldDataType.Reference => Icons.Material.Filled.Link,
+            FieldDataType.Id => Icons.Material.Filled.Key,
+            _ => Icons.Material.Filled.TextFields
+        };
+    }
+
+    private Color GetFieldColor(FieldDataType dataType)
+    {
+        return dataType switch
+        {
+            FieldDataType.String => Color.Default,
+            FieldDataType.Int => Color.Primary,
+            FieldDataType.Double => Color.Primary,
+            FieldDataType.Currency => Color.Success,
+            FieldDataType.Boolean => Color.Info,
+            FieldDataType.Date => Color.Secondary,
+            FieldDataType.DateTime => Color.Secondary,
+            FieldDataType.Reference => Color.Warning,
+            _ => Color.Default
+        };
+    }
+}

@@ -1,0 +1,122 @@
+@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudPaper Class="pa-8" Elevation="3">
+        <MudText Typo="Typo.h2" Align="Align.Center" GutterBottom="true">
+            <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Large" /> 
+            Salesforce Report Builder
+        </MudText>
+        
+        <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Secondary" Class="mb-6">
+            Build custom Salesforce reports with an intuitive drag-and-drop interface
+        </MudText>
+
+        <MudDivider Class="my-6" />
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="2" Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Assessment" Color="Color.Primary" Size="Size.Large" />
+                        </MudText>
+                        <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">
+                            Report Builder
+                        </MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-4">
+                            Create custom reports by selecting objects and fields
+                        </MudText>
+                        <MudButton Href="/report-builder" 
+                                 Variant="Variant.Filled" 
+                                 Color="Color.Primary" 
+                                 FullWidth="true"
+                                 StartIcon="@Icons.Material.Filled.ArrowForward">
+                            Build Report
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="2" Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Storage" Color="Color.Secondary" Size="Size.Large" />
+                        </MudText>
+                        <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">
+                            Metadata Browser
+                        </MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-4">
+                            Explore Salesforce objects, fields, and relationships
+                        </MudText>
+                        <MudButton Href="/metadata" 
+                                 Variant="Variant.Filled" 
+                                 Color="Color.Secondary" 
+                                 FullWidth="true"
+                                 StartIcon="@Icons.Material.Filled.ArrowForward">
+                            Browse Metadata
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="2" Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Code" Color="Color.Tertiary" Size="Size.Large" />
+                        </MudText>
+                        <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">
+                            SOQL Queries
+                        </MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-4">
+                            Generate optimized SOQL queries automatically
+                        </MudText>
+                        <MudButton Variant="Variant.Outlined" 
+                                 Color="Color.Default" 
+                                 FullWidth="true"
+                                 Disabled="true">
+                            Coming Soon
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-6" />
+
+        <MudText Typo="Typo.h5" GutterBottom="true">Features</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudText>946+ Salesforce objects supported</MudText>
+                </MudStack>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudText>15,000+ fields with metadata</MudText>
+                </MudStack>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudText>Automatic SOQL generation</MudText>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudText>Real-time query preview</MudText>
+                </MudStack>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudText>Custom and standard objects</MudText>
+                </MudStack>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                    <MudText>Field type validation</MudText>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
