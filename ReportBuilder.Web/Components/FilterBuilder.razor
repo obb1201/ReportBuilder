@@ -78,7 +78,7 @@
                             </MudItem>
 
                             <!-- Value Input(s) -->
-                            <MudItem xs="12" sm="@(isLastFilter ? "5" : "4")">
+                            <MudItem xs="12" sm="@(isLastFilter ? 5 : 4)">
                                 @if (filter.Field != null && !IsNullCheckOperation(filter.Operation))
                                 {
                                     @if (filter.Operation == FilterOperation.Between)

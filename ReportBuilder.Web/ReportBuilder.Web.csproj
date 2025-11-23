@@ -5,7 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
+  <PropertyGroup>
+    <RootNamespace>ReportBuilder.Web</RootNamespace>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ReportBuilder.Core\ReportBuilder.Core.csproj" />
   </ItemGroup>
