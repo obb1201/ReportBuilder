@@ -1,0 +1,318 @@
+@using global::ReportBuilder.Core.Models.Metadata
+@using global::ReportBuilder.Web.Models
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" /> Filters
+            </MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudButton Size="Size.Small"
+                      Variant="Variant.Text"
+                      Color="Color.Primary"
+                      StartIcon="@Icons.Material.Filled.Add"
+                      OnClick="AddFilter"
+                      Disabled="@(AvailableFields == null || !AvailableFields.Any())">
+                Add Filter
+            </MudButton>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Filters == null || !Filters.Any())
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                No filters applied. Click "Add Filter" to add filtering criteria.
+            </MudAlert>
+        }
+        else
+        {
+            <MudStack Spacing="3">
+                @foreach (var filter in Filters)
+                {
+                    var isLastFilter = filter == Filters.Last();
+
+                    <MudPaper Elevation="1" Class="pa-3">
+                        <MudGrid Spacing="2">
+                            <!-- Field Selector -->
+                            <MudItem xs="12" sm="3">
+                                <MudSelect T="MetadataField"
+                                          Label="Field"
+                                          Value="@filter.Field"
+                                          ValueChanged="@(field => HandleFieldChanged(filter, field))"
+                                          Dense="true"
+                                          Variant="Variant.Outlined">
+                                    @if (AvailableFields != null)
+                                    {
+                                        @foreach (var field in AvailableFields.Where(f => f.Capabilities.IsFilterable))
+                                        {
+                                            <MudSelectItem Value="@field">
+                                                @field.Label (@field.ApiName)
+                                            </MudSelectItem>
+                                        }
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <!-- Operator Selector -->
+                            <MudItem xs="12" sm="3">
+                                <MudSelect T="FilterOperation"
+                                          Label="Operator"
+                                          Value="@filter.Operation"
+                                          ValueChanged="@(op => HandleOperatorChanged(filter, op))"
+                                          Dense="true"
+                                          Variant="Variant.Outlined"
+                                          Disabled="@(filter.Field == null)">
+                                    @if (filter.Field != null)
+                                    {
+                                        @foreach (var op in FilterOperatorHelper.GetOperatorsForFieldType(filter.Field.DataType))
+                                        {
+                                            <MudSelectItem Value="@op">
+                                                @FilterOperatorHelper.GetOperationDisplayName(op)
+                                            </MudSelectItem>
+                                        }
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <!-- Value Input(s) -->
+                            <MudItem xs="12" sm="@(isLastFilter ? "5" : "4")">
+                                @if (filter.Field != null && !IsNullCheckOperation(filter.Operation))
+                                {
+                                    @if (filter.Operation == FilterOperation.Between)
+                                    {
+                                        <MudStack Row="true" Spacing="1">
+                                            @RenderValueInput(filter, false)
+                                            <MudText Typo="Typo.body2" Class="mt-3">and</MudText>
+                                            @RenderValueInput(filter, true)
+                                        </MudStack>
+                                    }
+                                    else
+                                    {
+                                        @RenderValueInput(filter, false)
+                                    }
+                                }
+                                else if (IsNullCheckOperation(filter.Operation))
+                                {
+                                    <MudText Typo="Typo.body2" Class="mt-3" Color="Color.Secondary">
+                                        (No value needed)
+                                    </MudText>
+                                }
+                            </MudItem>
+
+                            <!-- Logical Operator (if not last) -->
+                            @if (!isLastFilter)
+                            {
+                                <MudItem xs="12" sm="1">
+                                    <MudSelect T="LogicalOperator"
+                                              Label="Logic"
+                                              Value="@filter.LogicalOperator"
+                                              ValueChanged="@(op => HandleLogicalOperatorChanged(filter, op))"
+                                              Dense="true"
+                                              Variant="Variant.Outlined">
+                                        <MudSelectItem Value="@LogicalOperator.And">AND</MudSelectItem>
+                                        <MudSelectItem Value="@LogicalOperator.Or">OR</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                            }
+
+                            <!-- Remove Button -->
+                            <MudItem xs="12" sm="1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                             Color="Color.Error"
+                                             Size="Size.Small"
+                                             OnClick="@(() => RemoveFilter(filter))"
+                                             Title="Remove filter" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                }
+
+                @if (Filters.Count > 1)
+                {
+                    <MudButton Variant="Variant.Text"
+                              Color="Color.Default"
+                              StartIcon="@Icons.Material.Filled.Clear"
+                              Size="Size.Small"
+                              OnClick="ClearAllFilters">
+                        Clear All Filters
+                    </MudButton>
+                }
+            </MudStack>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public List<MetadataField>? AvailableFields { get; set; }
+
+    [Parameter]
+    public List<FilterCriteria> Filters { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<FilterCriteria>> FiltersChanged { get; set; }
+
+    private void AddFilter()
+    {
+        Filters.Add(new FilterCriteria());
+        NotifyFiltersChanged();
+    }
+
+    private void RemoveFilter(FilterCriteria filter)
+    {
+        Filters.Remove(filter);
+        NotifyFiltersChanged();
+        Snackbar.Add("Filter removed", Severity.Info);
+    }
+
+    private void ClearAllFilters()
+    {
+        Filters.Clear();
+        NotifyFiltersChanged();
+        Snackbar.Add("All filters cleared", Severity.Info);
+    }
+
+    private void HandleFieldChanged(FilterCriteria filter, MetadataField field)
+    {
+        filter.Field = field;
+        // Reset operator to first available for this field type
+        var availableOps = FilterOperatorHelper.GetOperatorsForFieldType(field.DataType);
+        filter.Operation = availableOps.FirstOrDefault();
+        filter.Value = string.Empty;
+        filter.Value2 = null;
+        NotifyFiltersChanged();
+    }
+
+    private void HandleOperatorChanged(FilterCriteria filter, FilterOperation operation)
+    {
+        filter.Operation = operation;
+        // Clear values if switching to/from null check
+        if (IsNullCheckOperation(operation))
+        {
+            filter.Value = string.Empty;
+            filter.Value2 = null;
+        }
+        NotifyFiltersChanged();
+    }
+
+    private void HandleLogicalOperatorChanged(FilterCriteria filter, LogicalOperator op)
+    {
+        filter.LogicalOperator = op;
+        NotifyFiltersChanged();
+    }
+
+    private void HandleValueChanged(FilterCriteria filter, string value, bool isSecondValue = false)
+    {
+        if (isSecondValue)
+            filter.Value2 = value;
+        else
+            filter.Value = value;
+
+        NotifyFiltersChanged();
+    }
+
+    private bool IsNullCheckOperation(FilterOperation operation)
+    {
+        return operation == FilterOperation.IsNull || operation == FilterOperation.IsNotNull;
+    }
+
+    private async Task NotifyFiltersChanged()
+    {
+        await FiltersChanged.InvokeAsync(Filters);
+    }
+
+    private RenderFragment RenderValueInput(FilterCriteria filter, bool isSecondValue)
+    {
+        var value = isSecondValue ? filter.Value2 ?? string.Empty : filter.Value;
+
+        return @<text>
+            @switch (filter.Field?.DataType)
+            {
+                case FieldDataType.Boolean:
+                    <MudSelect T="string"
+                              Label="@(isSecondValue ? "Value 2" : "Value")"
+                              Value="@value"
+                              ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                              Dense="true"
+                              Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("true")">True</MudSelectItem>
+                        <MudSelectItem Value="@("false")">False</MudSelectItem>
+                    </MudSelect>
+                    break;
+
+                case FieldDataType.Date:
+                    <MudTextField T="string"
+                                 Label="@(isSecondValue ? "Value 2" : "Value")"
+                                 Value="@value"
+                                 ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                                 Dense="true"
+                                 Variant="Variant.Outlined"
+                                 InputType="InputType.Date"
+                                 HelperText="YYYY-MM-DD" />
+                    break;
+
+                case FieldDataType.DateTime:
+                    <MudTextField T="string"
+                                 Label="@(isSecondValue ? "Value 2" : "Value")"
+                                 Value="@value"
+                                 ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                                 Dense="true"
+                                 Variant="Variant.Outlined"
+                                 InputType="InputType.DateTimeLocal"
+                                 HelperText="ISO format" />
+                    break;
+
+                case FieldDataType.Int:
+                case FieldDataType.Double:
+                case FieldDataType.Currency:
+                case FieldDataType.Percent:
+                    <MudTextField T="string"
+                                 Label="@(isSecondValue ? "Value 2" : "Value")"
+                                 Value="@value"
+                                 ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                                 Dense="true"
+                                 Variant="Variant.Outlined"
+                                 InputType="InputType.Number" />
+                    break;
+
+                case FieldDataType.Picklist:
+                    @if (filter.Field?.PicklistValues != null && filter.Field.PicklistValues.Any())
+                    {
+                        <MudSelect T="string"
+                                  Label="@(isSecondValue ? "Value 2" : "Value")"
+                                  Value="@value"
+                                  ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                                  Dense="true"
+                                  Variant="Variant.Outlined">
+                            @foreach (var picklistValue in filter.Field.PicklistValues.Where(p => p.IsActive))
+                            {
+                                <MudSelectItem Value="@picklistValue.Value">@picklistValue.Label</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                     Label="@(isSecondValue ? "Value 2" : "Value")"
+                                     Value="@value"
+                                     ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                                     Dense="true"
+                                     Variant="Variant.Outlined" />
+                    }
+                    break;
+
+                default:
+                    <MudTextField T="string"
+                                 Label="@(isSecondValue ? "Value 2" : "Value")"
+                                 Value="@value"
+                                 ValueChanged="@(v => HandleValueChanged(filter, v, isSecondValue))"
+                                 Dense="true"
+                                 Variant="Variant.Outlined" />
+                    break;
+            }
+        </text>;
+    }
+}
