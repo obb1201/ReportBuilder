@@ -50,15 +50,12 @@ builder.Services.AddLogging(logging =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Report Builder Metadata API v1");
-        c.RoutePrefix = string.Empty; // Swagger at root
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Report Builder Metadata API v1");
+    c.RoutePrefix = "swagger"; // Swagger at /swagger
+});
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
