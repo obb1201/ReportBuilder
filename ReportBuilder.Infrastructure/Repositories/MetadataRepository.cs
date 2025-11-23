@@ -107,40 +107,53 @@ public class MetadataRepository : IMetadataRepository
     {
         _logger.LogInformation("Starting metadata sync for {Count} objects", objects.Count);
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        var syncStatus = new MetadataSyncStatusEntity
+        {
+            LastSyncStarted = DateTime.UtcNow,
+            IsSuccess = false
+        };
 
         try
         {
-            var syncStatus = new MetadataSyncStatusEntity
+            // Use the execution strategy to handle the transaction with retries
+            var strategy = _context.Database.CreateExecutionStrategy();
+            
+            await strategy.ExecuteAsync(async () =>
             {
-                LastSyncStarted = DateTime.UtcNow,
-                IsSuccess = false
-            };
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                
+                try
+                {
+                    foreach (var obj in objects)
+                    {
+                        await UpsertObjectAsync(obj);
+                        syncStatus.ObjectsProcessed++;
+                        syncStatus.FieldsProcessed += obj.Fields.Count;
+                        syncStatus.RelationshipsProcessed += obj.Relationships.Count + obj.ChildRelationships.Count;
+                    }
 
-            foreach (var obj in objects)
-            {
-                await UpsertObjectAsync(obj);
-                syncStatus.ObjectsProcessed++;
-                syncStatus.FieldsProcessed += obj.Fields.Count;
-                syncStatus.RelationshipsProcessed += obj.Relationships.Count + obj.ChildRelationships.Count;
-            }
+                    await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
+                    syncStatus.LastSyncCompleted = DateTime.UtcNow;
+                    syncStatus.IsSuccess = true;
 
-            syncStatus.LastSyncCompleted = DateTime.UtcNow;
-            syncStatus.IsSuccess = true;
+                    _context.MetadataSyncStatus.Add(syncStatus);
+                    await _context.SaveChangesAsync();
 
-            _context.MetadataSyncStatus.Add(syncStatus);
-            await _context.SaveChangesAsync();
-
-            await transaction.CommitAsync();
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
 
             _logger.LogInformation("Metadata sync completed successfully. Objects: {Objects}, Fields: {Fields}, Relationships: {Rels}",
                 syncStatus.ObjectsProcessed, syncStatus.FieldsProcessed, syncStatus.RelationshipsProcessed);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
             _logger.LogError(ex, "Error during metadata sync");
             throw;
         }

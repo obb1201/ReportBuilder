@@ -21,9 +21,15 @@ builder.Services.AddSwaggerGen(c =>
 
 // Add database context
 builder.Services.AddDbContext<MetadataDbContext>(options =>
+{
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("MetadataDb"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure()));
+        sqlOptions => 
+        {
+            // Comment out the retry strategy to allow manual transactions
+            // sqlOptions.EnableRetryOnFailure();
+        });
+});
 
 // Register repositories and services
 builder.Services.AddScoped<IMetadataRepository, MetadataRepository>();
