@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using ReportBuilder.Core.Models.Metadata;
+using ReportBuilder.Core;
 
 namespace ReportBuilder.Web.Services;
 

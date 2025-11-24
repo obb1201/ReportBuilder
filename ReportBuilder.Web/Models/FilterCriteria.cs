@@ -1,4 +1,4 @@
-using ReportBuilder.Core.Models.Metadata;
+using ReportBuilder.Core;
 
 namespace ReportBuilder.Web.Models;
 

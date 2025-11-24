@@ -1,6 +1,6 @@
-using ReportBuilder.Core.Models.Metadata;
+using ReportBuilder.Core;
 
-namespace ReportBuilder.Core.Interfaces;
+namespace ReportBuilder.Core;
 
 /// <summary>
 /// Repository interface for metadata operations

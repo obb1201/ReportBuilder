@@ -1,8 +1,7 @@
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
-using ReportBuilder.Core.Interfaces;
-using ReportBuilder.Core.Models.Metadata;
+using ReportBuilder.Core;
 
 namespace ReportBuilder.Metadata.Services;
 

@@ -1,4 +1,4 @@
-namespace ReportBuilder.Core.Models.Metadata;
+namespace ReportBuilder.Core;
 
 /// <summary>
 /// Represents a Salesforce object (sObject) with complete metadata

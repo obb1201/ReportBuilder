@@ -1,4 +1,4 @@
-using ReportBuilder.Core.Models.Metadata;
+using ReportBuilder.Core;
 using ReportBuilder.Web.Models;
 using System.Text;
 

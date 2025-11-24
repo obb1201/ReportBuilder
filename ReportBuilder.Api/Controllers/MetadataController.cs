@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using ReportBuilder.Core.Interfaces;
-using ReportBuilder.Core.Models.Metadata;
+using ReportBuilder.Core;
 
 namespace ReportBuilder.Api.Controllers;
 
