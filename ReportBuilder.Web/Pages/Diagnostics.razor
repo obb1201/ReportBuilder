@@ -1,0 +1,200 @@
+@page "/diagnostics"
+@inject MetadataApiClient ApiClient
+@inject ISnackbar Snackbar
+@inject IConfiguration Configuration
+
+<PageTitle>Diagnostics</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h3" GutterBottom="true">
+        <MudIcon Icon="@Icons.Material.Filled.BugReport" /> System Diagnostics
+    </MudText>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Configuration</MudText>
+        <MudSimpleTable Dense="true" Bordered="true">
+            <tbody>
+                <tr>
+                    <td><strong>API Base URL</strong></td>
+                    <td>@Configuration["ApiBaseUrl"]</td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">API Connection Test</MudText>
+
+        <MudButton Variant="Variant.Filled"
+                  Color="Color.Primary"
+                  OnClick="TestApiConnection"
+                  Disabled="_testing">
+            @if (_testing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <text>Testing...</text>
+            }
+            else
+            {
+                <text>Test Connection</text>
+            }
+        </MudButton>
+
+        @if (_testResults.Any())
+        {
+            <MudList Class="mt-4">
+                @foreach (var result in _testResults)
+                {
+                    <MudListItem>
+                        <MudAlert Severity="@result.Severity">
+                            <strong>@result.Title:</strong> @result.Message
+                        </MudAlert>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+
+        @if (_objectCount.HasValue)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4">
+                Found <strong>@_objectCount</strong> objects in the database
+            </MudAlert>
+
+            @if (_sampleObjects.Any())
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-4">Sample Objects:</MudText>
+                <MudChipSet>
+                    @foreach (var obj in _sampleObjects.Take(10))
+                    {
+                        <MudChip Color="Color.Primary">@obj.Label (@obj.ApiName)</MudChip>
+                    }
+                </MudChipSet>
+            }
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Quick Actions</MudText>
+        <MudStack Row="true" Spacing="2">
+            <MudButton Variant="Variant.Outlined"
+                      Color="Color.Primary"
+                      Href="/report-builder"
+                      StartIcon="@Icons.Material.Filled.Assessment">
+                Go to Report Builder
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                      Color="Color.Secondary"
+                      Href="/"
+                      StartIcon="@Icons.Material.Filled.Home">
+                Go to Home
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool _testing = false;
+    private int? _objectCount;
+    private List<MetadataObject> _sampleObjects = new();
+    private List<TestResult> _testResults = new();
+
+    private class TestResult
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public Severity Severity { get; set; }
+    }
+
+    private async Task TestApiConnection()
+    {
+        _testing = true;
+        _testResults.Clear();
+        _objectCount = null;
+        _sampleObjects.Clear();
+
+        try
+        {
+            // Test 1: Can we reach the API?
+            _testResults.Add(new TestResult
+            {
+                Title = "Step 1",
+                Message = "Attempting to connect to API...",
+                Severity = Severity.Info
+            });
+            StateHasChanged();
+            await Task.Delay(100);
+
+            // Test 2: Try to fetch objects
+            var objects = await ApiClient.GetObjectsAsync();
+
+            if (objects == null)
+            {
+                _testResults.Add(new TestResult
+                {
+                    Title = "Error",
+                    Message = "API returned null. The API might be down or misconfigured.",
+                    Severity = Severity.Error
+                });
+            }
+            else if (!objects.Any())
+            {
+                _testResults.Add(new TestResult
+                {
+                    Title = "Warning",
+                    Message = "API is reachable, but no objects were found. You need to sync metadata from a Salesforce WSDL file.",
+                    Severity = Severity.Warning
+                });
+            }
+            else
+            {
+                _objectCount = objects.Count;
+                _sampleObjects = objects;
+
+                _testResults.Add(new TestResult
+                {
+                    Title = "Success",
+                    Message = $"API is working! Found {objects.Count} Salesforce objects.",
+                    Severity = Severity.Success
+                });
+
+                // Test 3: Try to fetch details for Account
+                var account = objects.FirstOrDefault(o => o.ApiName == "Account");
+                if (account != null)
+                {
+                    var fullAccount = await ApiClient.GetObjectAsync("Account");
+                    if (fullAccount != null && fullAccount.Fields.Any())
+                    {
+                        _testResults.Add(new TestResult
+                        {
+                            Title = "Success",
+                            Message = $"Account object loaded with {fullAccount.Fields.Count} fields",
+                            Severity = Severity.Success
+                        });
+                    }
+                }
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _testResults.Add(new TestResult
+            {
+                Title = "Connection Error",
+                Message = $"Cannot reach API: {ex.Message}. Make sure ReportBuilder.Api is running on {Configuration["ApiBaseUrl"]}",
+                Severity = Severity.Error
+            });
+        }
+        catch (Exception ex)
+        {
+            _testResults.Add(new TestResult
+            {
+                Title = "Error",
+                Message = $"Unexpected error: {ex.Message}",
+                Severity = Severity.Error
+            });
+        }
+        finally
+        {
+            _testing = false;
+        }
+    }
+}
