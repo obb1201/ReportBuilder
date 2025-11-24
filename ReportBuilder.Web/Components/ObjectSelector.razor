@@ -14,9 +14,10 @@
         }
         else if (_objects.Any())
         {
-            <MudAutocomplete T="MetadataObject" 
-                             Label="Salesforce Object" 
-                             @bind-Value="_selectedObject"
+            <MudAutocomplete T="MetadataObject"
+                             Label="Salesforce Object"
+                             Value="_selectedObject"
+                             ValueChanged="HandleSelectionChanged"
                              SearchFunc="SearchObjects"
                              ToStringFunc="@(obj => obj?.Label ?? "")"
                              Variant="Variant.Outlined"
