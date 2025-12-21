@@ -1,4 +1,6 @@
 @page "/diagnostics"
+@using global::ReportBuilder.Core
+@using global::ReportBuilder.Web.Services
 @inject MetadataApiClient ApiClient
 @inject ISnackbar Snackbar
 @inject IConfiguration Configuration
@@ -42,7 +44,7 @@
 
         @if (_testResults.Any())
         {
-            <MudList Class="mt-4">
+@*             <MudList Class="mt-4">
                 @foreach (var result in _testResults)
                 {
                     <MudListItem>
@@ -51,7 +53,7 @@
                         </MudAlert>
                     </MudListItem>
                 }
-            </MudList>
+            </MudList> *@
         }
 
         @if (_objectCount.HasValue)
@@ -63,12 +65,12 @@
             @if (_sampleObjects.Any())
             {
                 <MudText Typo="Typo.subtitle2" Class="mt-4">Sample Objects:</MudText>
-                <MudChipSet>
+@*                 <MudChipSet>
                     @foreach (var obj in _sampleObjects.Take(10))
                     {
                         <MudChip Color="Color.Primary">@obj.Label (@obj.ApiName)</MudChip>
                     }
-                </MudChipSet>
+                </MudChipSet> *@
             }
         }
     </MudPaper>

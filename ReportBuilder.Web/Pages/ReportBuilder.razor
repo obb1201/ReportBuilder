@@ -1,7 +1,6 @@
 @page "/report-builder"
-@using global::ReportBuilder.Core
-@using global::ReportBuilder.Web.Models
-@using global::ReportBuilder.Web.Services
+@using ReportBuilder.Core.Models.Metadata
+@using ReportBuilder.Web.Services
 @inject MetadataApiClient ApiClient
 @inject ISnackbar Snackbar
 
@@ -27,14 +26,6 @@
                 <FieldPanel ObjectName="@_selectedObject.ApiName"
                            Fields="@_selectedObject.Fields"
                            OnFieldAdded="HandleFieldAdded" />
-            }
-
-            <!-- Filter Builder -->
-            @if (_selectedObject != null)
-            {
-                <FilterBuilder AvailableFields="@_selectedObject.Fields"
-                              Filters="@_filters"
-                              OnFiltersChanged="HandleFiltersChanged" />
             }
         </MudStack>
     </MudItem>
@@ -86,19 +77,15 @@
 @code {
     private MetadataObject? _selectedObject;
     private List<MetadataField> _selectedFields = new();
-    private List<FilterCriteria> _filters = new();
     private string _generatedQuery = string.Empty;
 
-    private Task HandleObjectSelected(MetadataObject obj)
+    private async Task HandleObjectSelected(MetadataObject obj)
     {
         _selectedObject = obj;
         _selectedFields.Clear();
-        _filters.Clear();
         GenerateQuery();
-
+        
         Snackbar.Add($"Selected: {obj.Label} ({obj.Fields.Count} fields available)", Severity.Info);
-
-        return Task.CompletedTask;
     }
 
     private Task HandleFieldAdded(MetadataField field)
@@ -129,13 +116,6 @@
         return Task.CompletedTask;
     }
 
-    private Task HandleFiltersChanged(List<FilterCriteria> filters)
-    {
-        _filters = filters;
-        GenerateQuery();
-        return Task.CompletedTask;
-    }
-
     private void GenerateQuery()
     {
         if (_selectedObject == null || !_selectedFields.Any())
@@ -144,19 +124,15 @@
             return;
         }
 
-        // Generate SOQL query using the query generator
-        _generatedQuery = SoqlQueryGenerator.GenerateQuery(
-            _selectedObject.ApiName,
-            _selectedFields,
-            _filters
-        );
+        // Generate SOQL query
+        var fieldNames = string.Join(", ", _selectedFields.Select(f => f.ApiName));
+        _generatedQuery = $"SELECT {fieldNames}\nFROM {_selectedObject.ApiName}";
     }
 
     private void ResetReport()
     {
         _selectedObject = null;
         _selectedFields.Clear();
-        _filters.Clear();
         _generatedQuery = string.Empty;
         Snackbar.Add("Report reset", Severity.Info);
     }

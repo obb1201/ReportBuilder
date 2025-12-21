@@ -1,0 +1,74 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4">
+        <i class="bi bi-bar-chart-fill text-primary"></i>
+        Salesforce Report Builder
+    </h1>
+    <p class="lead">Build custom Salesforce reports with an intuitive interface</p>
+</div>
+
+<div class="row g-4 mt-4">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-bar-graph display-1 text-primary"></i>
+                <h5 class="card-title mt-3">Report Builder</h5>
+                <p class="card-text">Create custom reports by selecting objects and fields</p>
+                <a asp-controller="ReportBuilder" asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-arrow-right-circle"></i> Build Report
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-database display-1 text-success"></i>
+                <h5 class="card-title mt-3">Metadata Browser</h5>
+                <p class="card-text">Explore Salesforce objects, fields, and relationships</p>
+                <a asp-controller="ReportBuilder" asp-action="MetadataBrowser" class="btn btn-success">
+                    <i class="bi bi-arrow-right-circle"></i> Browse Metadata
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-code-square display-1 text-info"></i>
+                <h5 class="card-title mt-3">SOQL Queries</h5>
+                <p class="card-text">Generate optimized SOQL queries automatically</p>
+                <button class="btn btn-secondary" disabled>
+                    <i class="bi bi-hourglass-split"></i> Coming Soon
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h3>Features</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check-circle-fill text-success"></i> 946+ Salesforce objects supported</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> 15,000+ fields with metadata</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Automatic SOQL generation</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Real-time query preview</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Custom and standard objects</li>
+                    <li><i class="bi bi-check-circle-fill text-success"></i> Field type validation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,13 +4,10 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>ReportBuilder.Web</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ReportBuilder.Core\ReportBuilder.Core.csproj" />
-    <ProjectReference Include="..\ReportBuilder.Infrastructure\ReportBuilder.Infrastructure.csproj" />
-    <ProjectReference Include="..\ReportBuilder.Metadata\ReportBuilder.Metadata.csproj" />
   </ItemGroup>
 
   <ItemGroup>

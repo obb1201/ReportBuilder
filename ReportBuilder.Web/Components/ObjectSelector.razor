@@ -1,5 +1,5 @@
+@using ReportBuilder.Core.Models.Metadata
 @using ReportBuilder.Web.Services
-@using ReportBuilder.Core
 @inject MetadataApiClient ApiClient
 @inject ISnackbar Snackbar
 
@@ -14,10 +14,9 @@
         }
         else if (_objects.Any())
         {
-            <MudAutocomplete T="MetadataObject"
-                             Label="Salesforce Object"
-                             Value="_selectedObject"
-                             ValueChanged="HandleSelectionChanged"
+            <MudAutocomplete T="MetadataObject" 
+                             Label="Salesforce Object" 
+                             @bind-Value="_selectedObject"
                              SearchFunc="SearchObjects"
                              ToStringFunc="@(obj => obj?.Label ?? "")"
                              Variant="Variant.Outlined"
@@ -97,23 +96,15 @@
         }
     }
 
-    private Task<IEnumerable<MetadataObject>> SearchObjects(string searchTerm, CancellationToken token)
+    private async Task<IEnumerable<MetadataObject>> SearchObjects(string searchTerm)
     {
-        IEnumerable<MetadataObject> result;
-
         if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            result = _objects.Take(50);
-        }
-        else
-        {
-            result = _objects
-                .Where(o => o.Label.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                            o.ApiName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .Take(50);
-        }
+            return _objects.Take(50);
 
-        return Task.FromResult(result);
+        return _objects
+            .Where(o => o.Label.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       o.ApiName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Take(50);
     }
 
     private string GetObjectIcon(MetadataObject obj)

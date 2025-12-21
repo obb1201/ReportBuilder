@@ -1,0 +1,110 @@
+@{
+    ViewData["Title"] = "Report Builder";
+}
+
+<h2>
+    <i class="bi bi-file-earmark-bar-graph"></i> Report Builder
+</h2>
+<p class="text-muted">Build custom reports by selecting an object and choosing fields to display</p>
+
+<div class="row mt-4">
+    <!-- Left Column: Object & Field Selection -->
+    <div class="col-md-5">
+        <!-- Object Selector Card -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-box"></i> Select Object</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="objectSearch" class="form-label">Search Objects</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="objectSearch" placeholder="Type to search...">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="objectSelect" class="form-label">Salesforce Object</label>
+                    <select class="form-select" id="objectSelect" size="10">
+                        <option value="">Loading objects...</option>
+                    </select>
+                </div>
+                <div id="objectInfo" class="alert alert-info d-none">
+                    <strong id="selectedObjectName"></strong>
+                    <span id="selectedObjectFieldCount" class="badge bg-secondary ms-2"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Fields Card -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Available Fields</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="fieldSearch" class="form-label">Search Fields</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="fieldSearch" placeholder="Type to filter...">
+                    </div>
+                </div>
+                <div id="fieldsList" style="max-height: 400px; overflow-y: auto;">
+                    <p class="text-muted">Select an object to view its fields</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Selected Fields & Query -->
+    <div class="col-md-7">
+        <!-- Selected Fields Card -->
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-check-square"></i> Selected Fields</h5>
+                <button class="btn btn-sm btn-light" id="clearFieldsBtn" disabled>
+                    <i class="bi bi-x-circle"></i> Clear All
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="selectedFieldsList">
+                    <p class="text-muted">Click on fields from the Available Fields panel to add them to your report</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Preview Card -->
+        <div class="card mb-3">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-code-square"></i> SOQL Query Preview</h5>
+                <button class="btn btn-sm btn-light" id="copyQueryBtn" disabled>
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+            </div>
+            <div class="card-body">
+                <pre id="queryPreview" class="bg-light p-3 rounded" style="min-height: 100px;"><code>Select an object and add fields to generate a SOQL query</code></pre>
+            </div>
+        </div>
+
+        <!-- Action Buttons Card -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" id="runQueryBtn" disabled>
+                        <i class="bi bi-play-circle"></i> Run Query
+                    </button>
+                    <button class="btn btn-secondary" id="saveReportBtn" disabled>
+                        <i class="bi bi-save"></i> Save Report
+                    </button>
+                    <button class="btn btn-outline-secondary ms-auto" id="resetBtn">
+                        <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/report-builder.js" asp-append-version="true"></script>
+}

@@ -1,4 +1,4 @@
-namespace ReportBuilder.Core;
+namespace ReportBuilder.Core.Models.Metadata;
 
 /// <summary>
 /// Represents a reference relationship (lookup or master-detail) from one object to another

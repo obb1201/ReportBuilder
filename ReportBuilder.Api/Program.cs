@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using ReportBuilder.Core;
+using ReportBuilder.Core.Interfaces;
 using ReportBuilder.Infrastructure.Data;
 using ReportBuilder.Infrastructure.Repositories;
 using ReportBuilder.Metadata.Services;

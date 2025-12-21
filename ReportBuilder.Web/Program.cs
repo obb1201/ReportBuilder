@@ -1,7 +1,6 @@
 using MudBlazor.Services;
 using ReportBuilder.Web.Services;
 using ReportBuilder.Web.Components;
-using ReportBuilder.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 

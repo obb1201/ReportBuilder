@@ -1,0 +1,105 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+
+/* Report Builder Specific Styles */
+.field-item {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.field-item:hover,
+.hover-bg-light:hover {
+  background-color: #f8f9fa !important;
+}
+
+.selected-field-item {
+  background-color: #f8f9fa;
+}
+
+#queryPreview {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: #0d6efd;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-bottom: 0;
+}
+
+#queryPreview code {
+  background: none;
+  padding: 0;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+  font-weight: 600;
+}
+
+/* Toast positioning */
+.toast-container {
+  z-index: 1090;
+}
+
+/* Custom scrollbar for field lists */
+#fieldsList::-webkit-scrollbar,
+#selectedFieldsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+#fieldsList::-webkit-scrollbar-track,
+#selectedFieldsList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#fieldsList::-webkit-scrollbar-thumb,
+#selectedFieldsList::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#fieldsList::-webkit-scrollbar-thumb:hover,
+#selectedFieldsList::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Make select boxes more user-friendly */
+#objectSelect {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+#objectSelect option {
+  padding: 5px;
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+}

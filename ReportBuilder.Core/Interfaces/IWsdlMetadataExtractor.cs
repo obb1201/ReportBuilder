@@ -1,6 +1,6 @@
-using ReportBuilder.Core;
+using ReportBuilder.Core.Models.Metadata;
 
-namespace ReportBuilder.Core;
+namespace ReportBuilder.Core.Interfaces;
 
 /// <summary>
 /// Service for extracting metadata from Salesforce Enterprise WSDL

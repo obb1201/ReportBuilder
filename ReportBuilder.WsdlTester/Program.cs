@@ -135,7 +135,7 @@ class Program
         }
     }
 
-    static void DisplaySummaryStatistics(List<ReportBuilder.Core.MetadataObject> objects)
+    static void DisplaySummaryStatistics(List<ReportBuilder.Core.Models.Metadata.MetadataObject> objects)
     {
         Console.WriteLine("📊 Summary Statistics");
         Console.WriteLine("════════════════════════════════════════════════════════════");
@@ -171,7 +171,7 @@ class Program
         Console.WriteLine();
     }
 
-    static void DisplaySampleObjects(List<ReportBuilder.Core.MetadataObject> objects)
+    static void DisplaySampleObjects(List<ReportBuilder.Core.Models.Metadata.MetadataObject> objects)
     {
         Console.WriteLine("📋 Sample Objects (first 10)");
         Console.WriteLine("════════════════════════════════════════════════════════════");
@@ -192,7 +192,7 @@ class Program
     }
 
     static async Task ExportToJsonAsync(
-        List<ReportBuilder.Core.MetadataObject> objects, 
+        List<ReportBuilder.Core.Models.Metadata.MetadataObject> objects, 
         string outputPath)
     {
         var options = new JsonSerializerOptions
