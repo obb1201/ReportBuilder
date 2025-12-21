@@ -116,6 +116,12 @@
                 displayObjectInfo(data);
                 displayFields(data.fields);
                 showToast(`Loaded ${data.fields.length} fields for ${data.label}`, 'success');
+                
+                // Initialize FilterBuilder with the selected object's fields
+                if (window.FilterBuilder) {
+                    window.FilterBuilder.setAvailableFields(data.fields);
+                    $('#addFilterBtn').prop('disabled', false);
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error loading object details:', error);
@@ -303,10 +309,21 @@
         }
 
         const fieldNames = selectedFields.map(f => f.apiName).join(',\n  ');
-        const query = `SELECT\n  ${fieldNames}\nFROM ${selectedObject.apiName}`;
+        let query = `SELECT\n  ${fieldNames}\nFROM ${selectedObject.apiName}`;
+        
+        // Add WHERE clause if FilterBuilder is available and has filters
+        if (window.FilterBuilder) {
+            const whereClause = window.FilterBuilder.getWhereClause();
+            if (whereClause) {
+                query += `\n${whereClause}`;
+            }
+        }
 
         $preview.text(query);
     }
+
+    // Expose function globally for FilterBuilder to call
+    window.updateQueryPreviewFromFilter = updateQueryPreview;
 
     // Copy query to clipboard
     function copyQueryToClipboard() {
@@ -342,6 +359,13 @@
             $('#fieldSearch').val('');
             $('#objectInfo').addClass('d-none');
             $('#fieldsList').html('<p class="text-muted">Select an object to view its fields</p>');
+            $('#addFilterBtn').prop('disabled', true);
+            
+            // Clear filters if FilterBuilder is available
+            if (window.FilterBuilder) {
+                window.FilterBuilder.clearFilters();
+            }
+            
             updateSelectedFieldsList();
             updateQueryPreview();
             showToast('Report builder reset', 'info');

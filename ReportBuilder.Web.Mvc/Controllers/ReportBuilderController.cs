@@ -23,6 +23,11 @@ public class ReportBuilderController : Controller
         return View();
     }
 
+    public IActionResult FilterBuilder()
+    {
+        return View();
+    }
+
     public IActionResult MetadataBrowser()
     {
         return View();
