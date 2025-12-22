@@ -9,6 +9,7 @@
     let reportColumns = []; // Columns in the report template
     let sortableInstance = null;
     let pageSize = 25;
+    let selectedObjectHasData = false;
 
     // Initialize
     $(document).ready(function() {
@@ -44,11 +45,10 @@
         // Reset button
         $('#resetBtn').on('click', resetReportBuilder);
 
-        // Placeholder buttons
-        $('#runQueryBtn').on('click', function() {
-            showToast('Run Query feature coming soon!', 'info');
-        });
+        // Run Query button
+        $('#runQueryBtn').on('click', executeQuery);
 
+        // Save Report button (placeholder)
         $('#saveReportBtn').on('click', function() {
             showToast('Save Report feature coming soon!', 'info');
         });
@@ -170,6 +170,9 @@
                     $('#addFilterBtn').prop('disabled', false);
                 }
                 
+                // Check if object has sample data
+                checkObjectHasData(objectName);
+                
                 showToast(`Loaded ${allColumns.length} columns`, 'success');
             },
             error: function() {
@@ -252,15 +255,15 @@
         if (reportColumns.length === 0) {
             $('#noColumnsMessage').show();
             $('#copyQueryBtn').prop('disabled', true);
-            $('#runQueryBtn').prop('disabled', true);
             $('#saveReportBtn').prop('disabled', true);
+            updateRunQueryButton();
             return;
         }
 
         $('#noColumnsMessage').hide();
         $('#copyQueryBtn').prop('disabled', false);
-        $('#runQueryBtn').prop('disabled', false);
         $('#saveReportBtn').prop('disabled', false);
+        updateRunQueryButton();
 
         reportColumns.forEach((col, index) => {
             const $item = createReportColumnItem(col, index);
@@ -440,6 +443,7 @@
             selectedObject = null;
             allColumns = [];
             reportColumns = [];
+            selectedObjectHasData = false;
             
             $('.object-item').removeClass('active');
             $('#columnList').html('<div class="text-center text-muted py-4"><i class="bi bi-columns" style="font-size: 2rem;"></i><p class="mt-2 mb-0">Select an object to view columns</p></div>');
@@ -453,6 +457,7 @@
                 window.FilterBuilder.clearFilters();
             }
             
+            updateRunQueryButton();
             updateQueryPreview();
             showToast('Report builder reset', 'info');
         }
@@ -521,4 +526,271 @@
             $(this).remove();
         });
     }
+
+    // Check if object has sample data
+    async function checkObjectHasData(objectName) {
+        try {
+            const response = await $.ajax({
+                url: `/api/DataApi/check/${objectName}`,
+                method: 'GET'
+            });
+            
+            selectedObjectHasData = response.hasData;
+            updateRunQueryButton();
+            
+            if (response.hasData) {
+                showToast(`${objectName} has sample data ready`, 'success');
+            } else {
+                showToast(`${objectName} needs sample data - click Setup Data`, 'warning');
+            }
+        } catch (error) {
+            console.error('Error checking object data:', error);
+            selectedObjectHasData = false;
+            updateRunQueryButton();
+        }
+    }
+
+    // Setup sample data for selected object
+    async function setupObjectData() {
+        if (!selectedObject) {
+            showToast('Please select an object first', 'warning');
+            return;
+        }
+        
+        if (confirm(`Generate 500 sample records for ${selectedObject.label}?\n\nThis may take 10-30 seconds.`)) {
+            const originalHtml = '<i class="bi bi-gear-fill"></i> Setup';
+            const loadingHtml = '<span class="spinner-border spinner-border-sm me-1"></span>Generating...';
+            
+            // Note: Setup button will be added to HTML
+            showToast('Generating sample data... please wait', 'info');
+            
+            try {
+                const response = await $.ajax({
+                    url: `/api/DataApi/setup/${selectedObject.apiName}?recordCount=500`,
+                    method: 'POST',
+                    timeout: 300000 // 5 minutes
+                });
+                
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    selectedObjectHasData = true;
+                    updateRunQueryButton();
+                } else {
+                    showToast('Failed to generate data', 'danger');
+                }
+            } catch (error) {
+                console.error('Error setting up data:', error);
+                const errorMsg = error.responseJSON?.error || error.statusText || 'Unknown error';
+                showToast('Error generating data: ' + errorMsg, 'danger');
+            }
+        }
+    }
+
+    // Execute SOQL query
+    async function executeQuery() {
+        if (!selectedObject || reportColumns.length === 0) {
+            showToast('Please select an object and add columns', 'warning');
+            return;
+        }
+        
+        if (!selectedObjectHasData) {
+            if (confirm('This object has no sample data yet.\n\nWould you like to generate 500 sample records now?')) {
+                await setupObjectData();
+                // After setup completes, try executing again
+                if (selectedObjectHasData) {
+                    await executeQuery();
+                }
+            }
+            return;
+        }
+        
+        // Generate SOQL query
+        const soqlQuery = generateSoqlQuery();
+        
+        const $btn = $('#runQueryBtn');
+        const originalHtml = $btn.html();
+        $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Running...').prop('disabled', true);
+        
+        try {
+            const response = await $.ajax({
+                url: '/api/DataApi/execute',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ soqlQuery: soqlQuery }),
+                timeout: 60000 // 1 minute
+            });
+            
+            if (response.success) {
+                displayQueryResults(response);
+                showToast(`Query executed in ${response.executionTimeMs}ms - ${response.recordCount} records`, 'success');
+            } else {
+                showToast('Query failed: ' + response.error, 'danger');
+            }
+        } catch (error) {
+            console.error('Error executing query:', error);
+            const errorMsg = error.responseJSON?.error || error.statusText || 'Unknown error';
+            showToast('Error executing query: ' + errorMsg, 'danger');
+        } finally {
+            $btn.html(originalHtml).prop('disabled', !selectedObjectHasData || reportColumns.length === 0);
+        }
+    }
+
+    // Generate SOQL query from current state
+    function generateSoqlQuery() {
+        const fields = reportColumns.map(c => c.apiName).join(', ');
+        let query = `SELECT ${fields} FROM ${selectedObject.apiName}`;
+        
+        // Add WHERE clause from FilterBuilder if available
+        if (window.FilterBuilder) {
+            const whereClause = window.FilterBuilder.getWhereClause();
+            if (whereClause) {
+                query += `\n${whereClause}`;
+            }
+        }
+        
+        // Add ORDER BY from sorting
+        const sortedColumns = reportColumns.filter(c => c.sortDirection);
+        if (sortedColumns.length > 0) {
+            const orderBy = sortedColumns.map(c => `${c.apiName} ${c.sortDirection}`).join(', ');
+            query += `\nORDER BY ${orderBy}`;
+        }
+        
+        // Add LIMIT from page size
+        query += `\nLIMIT ${pageSize}`;
+        
+        return query;
+    }
+
+    // Display query results in modal
+    function displayQueryResults(response) {
+        // Remove existing results modal if any
+        $('#queryResultsModal').remove();
+        
+        // Create results modal
+        const modal = `
+            <div class="modal fade" id="queryResultsModal" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-table"></i> Query Results 
+                                <span class="badge bg-primary ms-2">${response.recordCount} records</span>
+                                <span class="badge bg-secondary ms-1">${response.executionTimeMs}ms</span>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <button class="btn btn-sm btn-success" id="exportCsvBtn">
+                                        <i class="bi bi-download"></i> Export CSV
+                                    </button>
+                                </div>
+                                <div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> 
+                                        Showing up to ${pageSize} records
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                                <table class="table table-striped table-hover table-sm" id="resultsTable">
+                                    <thead class="sticky-top bg-light">
+                                        <tr>
+                                            ${response.columns.map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${response.data.map(row => `
+                                            <tr>
+                                                ${response.columns.map(c => `
+                                                    <td>${formatValue(row[c.name])}</td>
+                                                `).join('')}
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                <strong>Generated SQL Query:</strong>
+                                <pre class="bg-light p-2 rounded mt-2" style="font-size: 0.85rem;"><code>${escapeHtml(response.sqlQuery)}</code></pre>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(modal);
+        const modalInstance = new bootstrap.Modal(document.getElementById('queryResultsModal'));
+        modalInstance.show();
+        
+        // CSV Export handler
+        $('#exportCsvBtn').on('click', function() {
+            exportToCsv(response.columns, response.data);
+        });
+    }
+
+    // Format value for display
+    function formatValue(value) {
+        if (value === null || value === undefined) {
+            return '<span class="text-muted">null</span>';
+        }
+        if (typeof value === 'boolean') {
+            return value ? '<span class="badge bg-success">true</span>' : '<span class="badge bg-secondary">false</span>';
+        }
+        if (typeof value === 'number') {
+            return value.toLocaleString();
+        }
+        return escapeHtml(String(value));
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Export to CSV
+    function exportToCsv(columns, data) {
+        let csv = columns.map(c => c.name).join(',') + '\n';
+        
+        data.forEach(row => {
+            const values = columns.map(c => {
+                let value = row[c.name];
+                if (value === null || value === undefined) {
+                    return '';
+                }
+                value = String(value);
+                if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                    value = '"' + value.replace(/"/g, '""') + '"';
+                }
+                return value;
+            });
+            csv += values.join(',') + '\n';
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${selectedObject.apiName}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        showToast('CSV file downloaded', 'success');
+    }
+
+    // Update Run Query button state
+    function updateRunQueryButton() {
+        const canRun = selectedObject && reportColumns.length > 0 && selectedObjectHasData;
+        $('#runQueryBtn').prop('disabled', !canRun);
+    }
+
+    // Expose setupObjectData globally so it can be called from a button
+    window.setupObjectData = setupObjectData;
 })();

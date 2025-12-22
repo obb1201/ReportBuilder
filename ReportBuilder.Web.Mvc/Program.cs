@@ -10,8 +10,15 @@ builder.Services.AddHttpClient("MetadataApi", client =>
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5000");
 });
 
-// Register MetadataApiService
+builder.Services.AddHttpClient("DataApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5000");
+    client.Timeout = TimeSpan.FromMinutes(5); // Longer timeout for data generation
+});
+
+// Register services
 builder.Services.AddScoped<ReportBuilder.Web.Mvc.Services.MetadataApiService>();
+builder.Services.AddScoped<ReportBuilder.Web.Mvc.Services.DataApiService>();
 
 // Add session support
 builder.Services.AddSession(options =>

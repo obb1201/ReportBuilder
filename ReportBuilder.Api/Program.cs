@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ReportBuilder.Core.Interfaces;
 using ReportBuilder.Infrastructure.Data;
 using ReportBuilder.Infrastructure.Repositories;
+using ReportBuilder.Infrastructure.Services;
 using ReportBuilder.Metadata.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,12 @@ builder.Services.AddDbContext<MetadataDbContext>(options =>
 // Register repositories and services
 builder.Services.AddScoped<IMetadataRepository, MetadataRepository>();
 builder.Services.AddScoped<IWsdlMetadataExtractor, WsdlMetadataExtractor>();
+
+// Register data services
+builder.Services.AddScoped<DynamicTableService>();
+builder.Services.AddScoped<DataGeneratorService>();
+builder.Services.AddScoped<SoqlToSqlConverter>();
+builder.Services.AddScoped<QueryExecutionService>();
 
 // Add CORS
 builder.Services.AddCors(options =>
