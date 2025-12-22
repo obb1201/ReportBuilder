@@ -16,7 +16,7 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-dark bg-primary mb-3">
+        <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
             <div class="container-fluid">
                 <a class="navbar-brand" href="/">
                     <i class="bi bi-bar-chart-fill"></i> Report Builder
@@ -36,26 +36,19 @@
                                 <i class="bi bi-file-earmark-bar-graph"></i> Report Builder
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="ReportBuilder" asp-action="MetadataBrowser">
-                                <i class="bi bi-database"></i> Metadata Browser
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
     
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main">
+        @RenderBody()
+    </main>
 
-    <footer class="border-top footer text-muted mt-5">
-        <div class="container text-center py-3">
-            &copy; 2024 - Salesforce Report Builder
+    <footer class="footer">
+        <div class="container">
+            <span class="text-muted">&copy; 2024 - Salesforce Report Builder</span>
         </div>
     </footer>
 

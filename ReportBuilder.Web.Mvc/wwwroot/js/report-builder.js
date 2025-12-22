@@ -122,6 +122,12 @@
                     window.FilterBuilder.setAvailableFields(data.fields);
                     $('#addFilterBtn').prop('disabled', false);
                 }
+                
+                // Initialize SortLimit with the selected object's fields
+                if (window.SortLimit) {
+                    window.SortLimit.setAvailableFields(data.fields);
+                    $('#addSortBtn').prop('disabled', false);
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error loading object details:', error);
@@ -318,12 +324,31 @@
                 query += `\n${whereClause}`;
             }
         }
+        
+        // Add ORDER BY clause if SortLimit is available and has sort fields
+        if (window.SortLimit) {
+            const orderByClause = window.SortLimit.getOrderByClause();
+            if (orderByClause) {
+                query += `\n${orderByClause}`;
+            }
+        }
+        
+        // Add LIMIT clause if SortLimit is available and has limit
+        if (window.SortLimit) {
+            const limitClause = window.SortLimit.getLimitClause();
+            if (limitClause) {
+                query += `\n${limitClause}`;
+            }
+        }
 
         $preview.text(query);
     }
 
     // Expose function globally for FilterBuilder to call
     window.updateQueryPreviewFromFilter = updateQueryPreview;
+    
+    // Expose function globally for SortLimit to call
+    window.updateQueryPreviewFromSortLimit = updateQueryPreview;
 
     // Copy query to clipboard
     function copyQueryToClipboard() {
@@ -360,10 +385,16 @@
             $('#objectInfo').addClass('d-none');
             $('#fieldsList').html('<p class="text-muted">Select an object to view its fields</p>');
             $('#addFilterBtn').prop('disabled', true);
+            $('#addSortBtn').prop('disabled', true);
             
             // Clear filters if FilterBuilder is available
             if (window.FilterBuilder) {
                 window.FilterBuilder.clearFilters();
+            }
+            
+            // Clear sort and limit if SortLimit is available
+            if (window.SortLimit) {
+                window.SortLimit.clearAll();
             }
             
             updateSelectedFieldsList();

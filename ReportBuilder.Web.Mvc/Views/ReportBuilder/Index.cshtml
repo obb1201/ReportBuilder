@@ -2,139 +2,143 @@
     ViewData["Title"] = "Report Builder";
 }
 
-<h2>
-    <i class="bi bi-file-earmark-bar-graph"></i> Report Builder
-</h2>
-<p class="text-muted">Build custom reports by selecting an object and choosing fields to display</p>
-
-<div class="row mt-4">
-    <!-- Left Column: Object & Field Selection -->
-    <div class="col-md-5">
-        <!-- Object Selector Card -->
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-box"></i> Select Object</h5>
+<div class="report-builder-container">
+    <!-- Header -->
+    <div class="report-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Report Builder
+                </h2>
+                <p class="text-muted mb-0">Build custom Salesforce reports with drag & drop</p>
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="objectSearch" class="form-label">Search Objects</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" id="objectSearch" placeholder="Type to search...">
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label for="objectSelect" class="form-label">Salesforce Object</label>
-                    <select class="form-select" id="objectSelect" size="10">
-                        <option value="">Loading objects...</option>
-                    </select>
-                </div>
-                <div id="objectInfo" class="alert alert-info d-none">
-                    <strong id="selectedObjectName"></strong>
-                    <span id="selectedObjectFieldCount" class="badge bg-secondary ms-2"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Available Fields Card -->
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Available Fields</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="fieldSearch" class="form-label">Search Fields</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" id="fieldSearch" placeholder="Type to filter...">
-                    </div>
-                </div>
-                <div id="fieldsList" style="max-height: 400px; overflow-y: auto;">
-                    <p class="text-muted">Select an object to view its fields</p>
-                </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" id="resetBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+                <button class="btn btn-secondary" id="saveReportBtn" disabled>
+                    <i class="bi bi-save"></i> Save
+                </button>
+                <button class="btn btn-primary" id="runQueryBtn" disabled>
+                    <i class="bi bi-play-circle"></i> Run
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Right Column: Selected Fields, Filters & Query -->
-    <div class="col-md-7">
-        <!-- Selected Fields Card -->
-        <div class="card mb-3">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-check-square"></i> Selected Fields</h5>
-                <button class="btn btn-sm btn-light" id="clearFieldsBtn" disabled>
-                    <i class="bi bi-x-circle"></i> Clear All
-                </button>
-            </div>
-            <div class="card-body">
-                <div id="selectedFieldsList">
-                    <p class="text-muted">Click on fields from the Available Fields panel to add them to your report</p>
+    <!-- Main Content Area -->
+    <div class="report-content">
+        <div class="report-grid">
+            <!-- Panel 1: Object Selection -->
+            <div class="panel panel-object">
+                <div class="panel-header">
+                    <i class="bi bi-box"></i> Objects
                 </div>
-            </div>
-        </div>
-
-        <!-- Filter Builder Card -->
-        <div class="card mb-3" id="filterBuilderCard">
-            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters</h5>
-                <button class="btn btn-sm btn-dark" id="addFilterBtn" disabled>
-                    <i class="bi bi-plus-circle"></i> Add Filter
-                </button>
-            </div>
-            <div class="card-body">
-                <div id="filtersContainer">
-                    <!-- Filters will be added here -->
-                </div>
-                
-                <div id="noFiltersMessage" class="text-muted text-center py-3">
-                    <i class="bi bi-funnel" style="font-size: 2rem;"></i>
-                    <p class="mt-2">No filters applied. Select an object and click "Add Filter" to start filtering results.</p>
-                </div>
-
-                <!-- AND/OR Logic Selector (shown when multiple filters) -->
-                <div id="filterLogicContainer" class="mt-3 d-none">
-                    <label class="form-label fw-bold">Filter Logic:</label>
-                    <div class="btn-group" role="group">
-                        <input type="radio" class="btn-check" name="filterLogic" id="filterLogicAnd" value="AND" checked>
-                        <label class="btn btn-outline-primary" for="filterLogicAnd">AND (All must match)</label>
-                        
-                        <input type="radio" class="btn-check" name="filterLogic" id="filterLogicOr" value="OR">
-                        <label class="btn btn-outline-primary" for="filterLogicOr">OR (Any can match)</label>
+                <div class="panel-body">
+                    <div class="search-box mb-3">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="objectSearch" placeholder="Search objects..." class="form-control form-control-sm">
                     </div>
-                    <small class="form-text text-muted d-block mt-1">
-                        <strong>AND:</strong> Records must match all filters | 
-                        <strong>OR:</strong> Records can match any filter
-                    </small>
+                    <div class="object-list" id="objectList">
+                        <div class="text-center text-muted py-3">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 mb-0">Loading objects...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Query Preview Card -->
-        <div class="card mb-3">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-code-square"></i> SOQL Query Preview</h5>
-                <button class="btn btn-sm btn-light" id="copyQueryBtn" disabled>
-                    <i class="bi bi-clipboard"></i> Copy
-                </button>
+            <!-- Panel 2: Column Selection -->
+            <div class="panel panel-columns">
+                <div class="panel-header">
+                    <i class="bi bi-columns"></i> Available Columns
+                </div>
+                <div class="panel-body">
+                    <div class="search-box mb-3">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="columnSearch" placeholder="Search columns..." class="form-control form-control-sm">
+                    </div>
+                    <div class="column-list" id="columnList">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-columns" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">Select an object to view columns</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <pre id="queryPreview" class="bg-light p-3 rounded" style="min-height: 100px;"><code>Select an object and add fields to generate a SOQL query</code></pre>
-            </div>
-        </div>
 
-        <!-- Action Buttons Card -->
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary" id="runQueryBtn" disabled>
-                        <i class="bi bi-play-circle"></i> Run Query
+            <!-- Panel 3: Filter Criteria -->
+            <div class="panel panel-filters">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-funnel"></i> Filter Criteria</span>
+                    <button class="btn btn-sm btn-light" id="addFilterBtn" disabled>
+                        <i class="bi bi-plus"></i>
                     </button>
-                    <button class="btn btn-secondary" id="saveReportBtn" disabled>
-                        <i class="bi bi-save"></i> Save Report
-                    </button>
-                    <button class="btn btn-outline-secondary ms-auto" id="resetBtn">
-                        <i class="bi bi-arrow-clockwise"></i> Reset
-                    </button>
+                </div>
+                <div class="panel-body">
+                    <div id="filtersContainer">
+                        <!-- Filters will be added here -->
+                    </div>
+                    
+                    <div id="noFiltersMessage" class="text-center text-muted py-4">
+                        <i class="bi bi-funnel" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">No filters applied</p>
+                        <small>Select an object and click + to add filters</small>
+                    </div>
+
+                    <!-- AND/OR Logic -->
+                    <div id="filterLogicContainer" class="mt-3 d-none">
+                        <div class="btn-group btn-group-sm w-100" role="group">
+                            <input type="radio" class="btn-check" name="filterLogic" id="filterLogicAnd" value="AND" checked>
+                            <label class="btn btn-outline-primary" for="filterLogicAnd">AND</label>
+                            
+                            <input type="radio" class="btn-check" name="filterLogic" id="filterLogicOr" value="OR">
+                            <label class="btn btn-outline-primary" for="filterLogicOr">OR</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 4: Report Template -->
+            <div class="panel panel-report">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-file-text"></i> Report Template</span>
+                    <div class="d-flex gap-2 align-items-center">
+                        <label class="mb-0 me-2" style="font-size: 0.875rem; font-weight: normal;">
+                            <i class="bi bi-list-ol"></i> Page Size:
+                        </label>
+                        <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 100px;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <!-- Selected Columns (Drag & Drop) -->
+                    <div class="report-columns" id="reportColumns">
+                        <div id="noColumnsMessage" class="text-center text-muted py-4">
+                            <i class="bi bi-file-text" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">No columns selected</p>
+                            <small>Click on columns from the Available Columns panel</small>
+                        </div>
+                    </div>
+
+                    <!-- SOQL Query Preview -->
+                    <div class="query-preview mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong><i class="bi bi-code-square"></i> SOQL Query</strong>
+                            <button class="btn btn-sm btn-outline-secondary" id="copyQueryBtn" disabled>
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                        <pre id="queryPreview" class="query-code"><code>Select an object and add columns to generate a query</code></pre>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,6 +146,9 @@
 </div>
 
 @section Scripts {
+    <!-- Sortable.js for drag & drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="~/js/filter-builder.js" asp-append-version="true"></script>
-    <script src="~/js/report-builder.js" asp-append-version="true"></script>
+    <script src="~/js/report-builder-v2.js" asp-append-version="true"></script>
 }
+
